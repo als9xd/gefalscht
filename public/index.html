@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Gefalscht</title>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">let socket = io('/public');</script>
+
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+
+  </head>
+  <body>
+
+    <div class="example-class">Youtube Bot Detector</div>
+    <div id="example-id">Gefalscht</div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col">
+          <h1 id="socket-io-message"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+
+    <script>
+      socket.on('example_message',message => {
+        $('#socket-io-message').html(message);
+      });
+    </script>
+  </body>
+</html>
