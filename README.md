@@ -8,7 +8,6 @@ Within repository base directory run `docker-compose up --build` ( You may have 
 
 # Important files
 
-`index.js` - Main backend server file
-
-`public/index.html` - Main HTML file
-`public/css/styles.css` - Main CSS file
+* `index.js` - Main backend server file
+* `public/index.html` - Main HTML file
+* `public/css/styles.css` - Main CSS file
