@@ -13,13 +13,40 @@
   </head>
   <body>
 
-    <div class="example-class">Youtube Bot Detector</div>
-    <div id="example-id">Gefalscht</div>
-
     <div class="container">
       <div class="row">
+        <div class="col text-center">
+          <h1>Gefalscht</h1>
+          <h6>Youtube Bot Detector</h6>
+        </div>
+      </div>
+      <div class="row">
         <div class="col">
-          <h1 id="socket-io-message"></div>
+          <h3>Get comments on a video</h3>
+        </div>
+        <div class="col">
+          <form>
+            <div class="form-group">
+              <label for="audit-url">Video ID or Url</label>
+              <input id="audit-url" class="form-control" type="text" placeholder=""/>
+            </div>
+            <div class="form-group">
+              <label for="audit-url">Number of comment pages to retrieve</label>
+              <input id="num-audit-pages" type="number" class="form-control" placeholder=""/>
+            </div>
+          </form>
+          <button id="audit-btn" class="btn btn-primary">Submit</button>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div id="progress-text"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <ul id="comments-list">
+          </ul>
         </div>
       </div>
     </div>
@@ -28,9 +55,27 @@
     <script src="/js/bootstrap.min.js"></script>
 
     <script>
-      socket.on('example_message',message => {
-        $('#socket-io-message').html(message);
+      socket.on('audit.response',comments => {
+        $('#comments-list').html('');
+        console.log(comments);
+        for(let i = 0; i < comments.length;i++){
+          $('#comments-list').append(`<li>${comments[i].comment}</li>`)
+        }
       });
+
+      socket.on('audit.progress',data => {
+        const { completed,total } = data;
+        $('#progress-text').html(`<h4>Progress:&nbsp${completed}/${total}</h4>`);
+      });
+
+      $('#audit-btn').click(()=>{
+
+        socket.emit('audit.request',{
+          pages: $('#num-audit-pages').val(),
+          url: $('#audit-url').val(),
+        });
+      });
+
     </script>
   </body>
 </html>
