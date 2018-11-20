@@ -4,25 +4,59 @@
     <meta charset="UTF-8">
     <title>Gefalscht</title>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript">let socket = io('/public');</script>
-
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <!-- Loading-bar CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/loading-bar.css"/>
+
+    <!-- Toastr popup notifications CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/toastr.min.css"/>
+
+    <!-- Font awesome icons CSS -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/styles.css">
-
   </head>
-  <body>
 
+  <body>
     <div class="container">
-      <div class="row">
-        <div class="col text-center">
-          <h1>Gefalscht</h1>
-          <h6>Youtube Bot Detector</h6>
-        </div>
+      <div class="jumbotron text-center p-1">
+        <h1>Gefalscht</h1>
+        <p>Youtube Bot Detector</p>
       </div>
       <div class="row">
         <div class="col">
-          <h3>Get comments on a video</h3>
+          <h3>Bot Classification Rules</h3>
+          <p>
+            <form id="bot-rules-form">
+              <div class="form-group">
+                <input id="created-before-rule" class="form-check-input" type="checkbox"/>
+                <label class="form-check-label" for="created-before-rule">Created Before: <input id="created-before-input" type="number" class="form-control form-control-sm input-sm"/></label>
+              </div>
+              <div class="form-group">
+                <input id="created-after-rule" class="form-check-input" type="checkbox" checked/>
+                <label class="form-check-label" for="created-after-rule">Created After: <input id="created-after-input" type="number" class="form-control form-control-sm input-sm" value="2014"/></label>
+              </div>
+              <div class="form-group">
+                <input id="video-uploads-rule" class="form-check-input" type="checkbox" checked/>
+                <label class="form-check-label" for="video-uploads-rule">Has Uploaded Videos</label>
+              </div>
+              <div class="form-group">
+                <input id="playlists-rule" class="form-check-input" type="checkbox" checked/>
+                <label class="form-check-label" for="playlists-rule">No Playlists</label>
+              </div>
+              <div class="form-group">
+                <input id="subscribers-rule" class="form-check-input" type="checkbox"/>
+                <label class="form-check-label" for="subscribers-rule">Has Subscribers</label>
+              </div>
+              <div class="form-group">
+                <input id="subscriptions-rule" class="form-check-input" type="checkbox" checked/>
+                <label class="form-check-label" for="subscriptions-rule">No Subscriptions</label>
+              </div>
+            </form>
+          </p>
         </div>
         <div class="col">
           <form>
@@ -38,42 +72,167 @@
           <button id="audit-btn" class="btn btn-primary">Submit</button>
         </div>
       </div>
-      <div class="row">
-        <div class="col">
-          <div id="progress-text"></div>
+      <div id="progress-row" class="row my-3 d-none">
+        <div class="col-2">
+          <div id="progress-bar-text"></div>
+        </div>
+        <div class="col-10">
+          <div id="progress-bar" class="ldBar label-center" data-value="0" data-preset="line" data-aspect-ratio="none" style="width:100%;"></div>
         </div>
       </div>
       <div class="row">
         <div class="col">
-          <ul id="comments-list">
-          </ul>
+          <table id="comments-table" class="table table-dark d-none">
+            <thead>
+              <tr>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th>Comment</th>
+                <th>Channel Creation Date</th>
+                <th>Playlists</th>
+                <th>Subscribers</th>
+                <th>Subscriptions</th>
+                <th>Videos</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
 
+    <!-- Makes selecting HTML elecments easier (uses $() syntax) -->
     <script src="/js/jquery.min.js"></script>
+
+    <!-- Makes building user interfaces in HTML easier and more mobile friendly (provides CSS classes and other utilities) -->
     <script src="/js/bootstrap.min.js"></script>
 
     <script>
-      socket.on('audit.response',comments => {
-        $('#comments-list').html('');
-        console.log(comments);
+      function isBot(comment){
+        if($('#created-before-rule').is(':checked') && Number(comment.user.creation_date.slice(0,4)) >= Number($('#created-before-input').val())){
+          return false;
+        }
+        if($('#created-after-rule').is(':checked') && Number(comment.user.creation_date.slice(0,4)) < Number($('#created-after-input').val())){
+          return false;
+        }
+        if($('#video-uploads-rule').is(':checked') && Number(comment.user.num_videos) > 0){
+          return false;
+        }
+        if($('#playlists-rule').is(':checked') && Number(comment.user.num_playlists) !== 0){
+          return false;
+        }
+        if($('#subscribers-rule').is(':checked') && Number(comment.user.num_subscribers) > 0){
+          return false;
+        }
+        if($('#subscriptions-rule').is(':checked') && Number(comment.user.num_subscriptions) !== 0){
+          return false;
+        }
+        return true;
+      }
+
+      function createCommentsTable(comments){
+        // Clear the comments table
+        $('#comments-table tbody').html('');
+
+        // Loop through each recieved comment
         for(let i = 0; i < comments.length;i++){
-          $('#comments-list').append(`<li>${comments[i].comment}</li>`)
+          // Create a new row for each comment and push it onto the table
+          $('#comments-table tbody').append(`
+          <tr>
+            <td>${isBot(comments[i])?'<i class="fa fa-lg fa-robot"></i>':'<i class="fa fa-lg fa-user"></i>'}</td>
+            <td><img src="${comments[i].user.thumbnail_url}" /></td>
+            <td style="font-weight:bold"><a href="https://youtube.com/channel/${comments[i].user.id}">${comments[i].user.title}</a></td>
+            <td>${comments[i].comment.original_text}</td>
+            <td>${comments[i].user.creation_date}</td>
+            <td>${comments[i].user.num_playlists}</td>
+            <td>${comments[i].user.num_subscribers}</td>
+            <td>${comments[i].user.num_subscriptions===null?"private":comments[i].user.num_subscriptions}</td>
+            <td>${comments[i].user.num_videos}</td>
+          </tr>
+          `);
+        }
+
+        // Show the comments table by removing the bootstrap CSS class "d-none"
+        $('#comments-table').removeClass('d-none');
+      }
+
+      let activeComments = [];
+
+      $('#bot-rules-form input[type="checkbox"]').on('input',() => {
+        if(activeComments.length){
+          createCommentsTable(activeComments);
+          toastr.clear();
+          toastr.success('Table updated');
         }
       });
+    </script>
 
-      socket.on('audit.progress',data => {
-        const { completed,total } = data;
-        $('#progress-text').html(`<h4>Progress:&nbsp${completed}/${total}</h4>`);
+
+    <!-- Used for creating progress/loading bars -->
+    <script type="text/javascript" src="/js/loading-bar.js"></script>
+
+    <!-- Used for showing popup notifications -->
+    <script type="text/javascript" src="/js/toastr.min.js"></script>
+
+    <!-- Used for recieving data from the backend (index.js) -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">let socket = io('/public');</script>
+
+    <script>
+
+      // When backend message named "toaster.error" is recieved
+      socket.on('toastr.error',msg => {
+        // Show red (error) toastr popup notification
+        toastr.error(msg);
       });
 
-      $('#audit-btn').click(()=>{
+      // When backend message named "audit.response" is recieved
+      socket.on('audit.response',comments => {
+        activeComments = comments;
+        createCommentsTable(activeComments);
+      });
 
+      // Create progress/loading bar to show user video auditing progress
+      const loadingBar = new ldBar('#progress-bar');
+
+      // When backend message named "audit.progress" is recieved
+      socket.on('audit.progress',data => {
+
+        // Get the variables data.completed and data.total
+        const { completed,total } = data;
+
+        // Show the progress information by removing the bootstrap CSS class "d-none"
+        $('#progress-row').removeClass('d-none');
+
+        // Update the progress text
+        $('#progress-bar-text').html(`<strong>Progress:</strong>&nbsp${completed}/${total}`);
+
+        // Update the loading/progress bar
+        loadingBar.set((completed/total)*100);
+      });
+
+      // When the "Submit" button is clicked by the user
+      $('#audit-btn').click(() => {
+
+        // Clear the active comments
+        activeComments = [];
+
+        // Get the value that the user input and store it into the "total" variable
+        const total = $('#num-audit-pages').val();
+
+        // Send a message to the backend with the number of pages to retrive and the url that the user input
         socket.emit('audit.request',{
-          pages: $('#num-audit-pages').val(),
+          pages: total,
           url: $('#audit-url').val(),
         });
+
+        // Hide the comments table by adding the bootstrap CSS class "d-none"
+        $('#comments-table').addClass('d-none');
+
+        // Set the loading/progress bar to 0
+        loadingBar.set(0);
       });
 
     </script>

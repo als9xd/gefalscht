@@ -1,7 +1,23 @@
-.example-class {
-  color: red;
+table tbody tr {
+  border-bottom: 1px solid grey;
+}
+table tbody td {
+  border-left: 1px solid lightgrey;
+  border-right: 1px solid lightgrey;
 }
 
-#example-id {
-  font-style: italic;
+table tbody tr:first-child {
+  border-top: none;
+}
+table tbody tr:last-child {
+  border-bottom: none;
+}
+
+table tbody tr td img{
+  height: 2rem;
+  width: 2rem;
+}
+
+.ldBar.label-center > .ldBar-label {
+  left: 0;
 }
