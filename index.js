@@ -93,9 +93,13 @@ function getPageComments(videoId,currPage,numPages,nextPageToken,gatheredComment
   },(err,response,body) => {
     if(err){
       console.error(error);
-      socket.emit('get_comments.error',error);
       return;
     }
+    if(body.error && body.error.errors.length && body.error.errors[0].reason && body.error.errors[0].reason === 'keyInvalid'){
+      socket.emit('toastr.error','Invalid YouTube API Key.Follow the quickstart guide <a style="color:blue" href="https://github.com/als9xd/gefalscht">here</a>.');
+      return;
+    }
+
     if(!body.items){
       socket.emit('toastr.error','Could not find video');
       return;

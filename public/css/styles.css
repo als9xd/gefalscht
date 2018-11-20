@@ -21,3 +21,7 @@ table tbody tr td img{
 .ldBar.label-center > .ldBar-label {
   left: 0;
 }
+
+.toast-message a:hover {
+    text-decoration: underline!important;
+}
