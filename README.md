@@ -1,6 +1,6 @@
 # Requirements
 
-1. [docker](https://docs.docker.com/install/)
+1. [Docker](https://docs.docker.com/install/)
 2. [YouTube API key](https://developers.google.com/youtube/v3/getting-started)
 
 # How to start
