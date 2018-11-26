@@ -13,7 +13,7 @@ services:
     environment:
       DB_URL: postgres://postgres@postgres/gefalscht
       PORT: 8080
-      YT_API_KEY: "AIzaSyCrSD4-JFugipaTgYlPlWZfTkkUEGmrWiU" # Insert your youtube api key that you created here https://developers.google.com/youtube/v3/getting-started
+      YT_API_KEY: "" # Insert your youtube api key that you created here https://developers.google.com/youtube/v3/getting-started
   postgres:
     image: postgres
     environment:
