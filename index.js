@@ -203,7 +203,7 @@ function getPageComments(videoId,currPage,numPages,nextPageToken,gatheredComment
 
 pgc.connect()
 //.then(destroyData()) // Uncomment this if you want to remove all data in database
-.then(destroyTables()) // Uncomment this if you want to destory all tables in database
+//.then(destroyTables()) // Uncomment this if you want to destory all tables in database
 .then(createTables())
 .then(() => {
 
