@@ -19,73 +19,15 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/styles.css">
   </head>
-<!-- Button trigger modal -->
-<button type="button" class="btn" data-toggle="modal" data-target="#exampleModal">
-  Login
-</button>
+  <!-- Button trigger modal -->
+  <button type="button" class="btn" data-toggle="modal" data-target="#login-modal">
+    Login
+  </button>
 
-<!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Login to Gefalscht</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-              <label for="Username">Username</label>
-              <input id="Username" class="form-control" type="text" placeholder=""/>
-        </div>
-		<div class="form-group">
-              <label for="Password">Password</label>
-              <input id="Password" class="form-control" type="text" placeholder=""/>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary">Login</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Button trigger modal -->
-<button type="button" class="btn" data-toggle="modal" data-target="#examplModal">
-  Sign-up
-</button>
-
-<!-- Modal -->
-<div class="modal fade" id="examplModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Sign-up</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-		<div class="form-group">
-              <label for="Username">Username</label>
-              <input id="Username" class="form-control" type="text" placeholder=""/>
-        </div>
-		<div class="form-group">
-              <label for="Password">Password</label>
-              <input id="Password" class="form-control" type="text" placeholder=""/>
-        </div>
-		<div class="form-group">
-              <label for="Password">Confirm Password</label>
-              <input id="Password" class="form-control" type="text" placeholder=""/>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary">Sign-In</button>
-      </div>
-    </div>
-  </div>
-</div>
+  <!-- Button trigger modal -->
+  <button type="button" class="btn" data-toggle="modal" data-target="#register-modal">
+    Sign-up
+  </button>
 
   <body>
     <div class="container">
@@ -170,6 +112,72 @@
       </div>
     </div>
 
+    <!-- Login Modal -->
+    <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="login-modal-label" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="login-modal-label">Login to Gefalscht</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="login-username">Username</label>
+                  <input id="login-username" class="form-control" type="text" placeholder=""/>
+                </div>
+                <div class="form-group">
+                  <label for="login-password">Password</label>
+                  <input id="login-password" class="form-control" type="text" placeholder=""/>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button id="login-btn" type="button" class="btn btn-primary">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="register-modal" tabindex="-1" role="dialog" aria-labelledby="register-modal-label" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="register-modal-label">Sign-up</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="row">
+            <div class="col">
+              <div class="modal-body">
+                <div class="form-group">
+                  <label for="register-username">Username</label>
+                  <input id="register-username" class="form-control" type="text" placeholder=""/>
+                </div>
+                <div class="form-group">
+                  <label for="register-password">Password</label>
+                  <input id="register-password" class="form-control" type="text" placeholder=""/>
+                </div>
+                <div class="form-group">
+                  <label for="register-password-conf">Confirm Password</label>
+                  <input id="register-password-conf" class="form-control" type="text" placeholder=""/>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button id="register-btn" type="button" class="btn btn-primary">Submit</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Makes selecting HTML elecments easier (uses $() syntax) -->
     <script src="/js/jquery.min.js"></script>
 
@@ -177,6 +185,7 @@
     <script src="/js/bootstrap.min.js"></script>
 
     <script>
+
       function isBot(comment){
         if($('#created-before-rule').is(':checked') && Number(comment.user.creation_date.slice(0,4)) >= Number($('#created-before-input').val())){
           return false;
@@ -247,6 +256,22 @@
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript">let public_ns = io('/public');let private_ns = io('/private');</script>
     <script type="text/javascript">
+
+      $('#login-btn').click(event => {
+          public_ns.emit('login.request',{
+            username: $('#login-username').val(),
+            password: $('#login-password').val(),
+            password_confirmation: $('#login-password-conf').val(),
+          });
+      });
+
+      $('#register-btn').click(event => {
+          public_ns.emit('register.request',{
+            username: $('#register-username').val(),
+            password: $('#register-password').val(),
+            password_confirmation: $('#register-password-conf').val(),
+          });
+      });
 
       private_ns.on('toastr.error',msg => {
         toastr.error(msg);
@@ -319,6 +344,8 @@
         // Set the loading/progress bar to 0
         loadingBar.set(0);
       });
+
+
 
     </script>
   </body>
