@@ -178,18 +178,36 @@
 
     <!-- Used for recieving data from the backend (index.js) -->
     <script src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript">let socket = io('/public');</script>
+    <script type="text/javascript">let public_ns = io('/public');let private_ns = io('/private');</script>
+    <script type="text/javascript">
 
-    <script>
+      private_ns.on('toastr.error',msg => {
+        toastr.error(msg);
+      });
+
+      private_ns.on('toastr.success',msg => {
+        toastr.success(msg);
+      });
+
+      private_ns.on('history.response',history => {
+        toastr.success(`Instead of showing this notification build a gui from this data ${JSON.stringify(history)}`);
+      });
 
       // When backend message named "toaster.error" is recieved
-      socket.on('toastr.error',msg => {
+      public_ns.on('toastr.error',msg => {
         // Show red (error) toastr popup notification
         toastr.error(msg);
       });
 
+      // When backend message named "toaster.success" is recieved
+      public_ns.on('toastr.success',msg => {
+        // Show red (error) toastr popup notification
+        toastr.success(msg);
+      });
+
+
       // When backend message named "audit.response" is recieved
-      socket.on('audit.response',comments => {
+      public_ns.on('audit.response',comments => {
         activeComments = comments;
         createCommentsTable(activeComments);
       });
@@ -198,7 +216,7 @@
       const loadingBar = new ldBar('#progress-bar');
 
       // When backend message named "audit.progress" is recieved
-      socket.on('audit.progress',data => {
+      public_ns.on('audit.progress',data => {
 
         // Get the variables data.completed and data.total
         const { completed,total } = data;
@@ -223,7 +241,7 @@
         const total = $('#num-audit-pages').val();
 
         // Send a message to the backend with the number of pages to retrive and the url that the user input
-        socket.emit('audit.request',{
+        public_ns.emit('audit.request',{
           pages: total,
           url: $('#audit-url').val(),
         });
