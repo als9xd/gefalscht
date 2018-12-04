@@ -398,6 +398,17 @@ pgc.connect()
         }
       },(err,response,body) => {
         if(err) throw err;
+
+        if(body.error && body.error.errors.length && body.error.errors[0].reason && body.error.errors[0].reason === 'keyInvalid'){
+          socket.emit('toastr.error','Invalid YouTube API Key.Follow the quickstart guide <a style="color:blue" href="https://github.com/als9xd/gefalscht">here</a>.');
+          return;
+        }
+
+        if(!body.items){
+          socket.emit('toastr.error','Could not find video');
+          return;
+        }
+
         pgc.query('INSERT INTO yt_video (id,title,thumbnail_url,tags,upload_date) VALUES ($1,$2,$3,$4,$5) ON CONFLICT(id) DO UPDATE SET title = $2,thumbnail_url = $3, tags = $4, upload_date = $5',[videoId,body.items[0].snippet.title,body.items[0].snippet.thumbnails.high.url,body.items[0].snippet.tags,body.items[0].snippet.publishedAt],err => {
           if(err) throw err;
           socket.emit('audit.progress',{completed:0,total:pages?pages:'∞'});
