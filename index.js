@@ -1,3 +1,16 @@
+const CONFIG = {
+  crypto: {
+    password: {
+      hash_bytes: 32,
+      salt_bytes: 16,
+      iterations: 872791,
+    }
+  },
+  server: {
+    secret: 'Change me!',
+  },
+};
+
 const fs = require('fs');
 const path = require('path');
 
@@ -5,6 +18,23 @@ const request = require('request');
 
 const express = require('express');
 const app = express();
+
+const session = require('express-session')({
+  secret: CONFIG.server.secret,
+  resave: true,
+  saveUninitialized: true
+});
+app.use(session);
+
+// Auth middlware
+const checkAuth = (socket,next) => {
+  if (socket.handshake.session && socket.handshake.session.auth === true){
+    return next();
+  }
+  next(new Error('AUTH_ERROR'));
+};
+
+const express_socket_io_session = require('express-socket.io-session')(session);
 
 const pg = require('pg');
 const pgc = new pg.Client(process.env.DB_URL);
@@ -20,7 +50,7 @@ function createTables(){
     'CREATE TABLE IF NOT EXISTS yt_video (id VARCHAR(11) PRIMARY KEY,category_id VARCHAR(24),category_name TEXT,upload_date TIMESTAMPTZ NOT NULL)',
     'CREATE TABLE IF NOT EXISTS yt_comment (id VARCHAR(26) PRIMARY KEY,user_id VARCHAR(24) NOT NULL,video_id VARCHAR(11) NOT NULL,original_text TEXT NOT NULL,publish_date_list TIMESTAMPTZ[] )',
     'CREATE TABLE IF NOT EXISTS yt_user (id VARCHAR(26) PRIMARY KEY,title TEXT,thumbnail_url TEXT,num_videos NUMERIC NOT NULL,num_playlists NUMERIC NOT NULL,num_subscribers NUMERIC NOT NULL,num_subscriptions NUMERIC,creation_date TIMESTAMPTZ NOT NULL)',
-    'CREATE TABLE IF NOT EXISTS video_audit (video_id VARCHAR(11) NOT NULL,num_bots NUMERIC,num_comments NUMERIC,audit_date TIMESTAMPTZ NOT NULL, auditor_username TEXT)',
+    'CREATE TABLE IF NOT EXISTS video_audit (id SERIAL PRIMARY KEY,video_id VARCHAR(11) NOT NULL,comments JSONB NOT NULL,audit_date TIMESTAMPTZ NOT NULL, auditor_username TEXT)',
     // "user" is reserved word
     'CREATE TABLE IF NOT EXISTS site_user (username TEXT UNIQUE NOT NULL,password BYTEA NOT NULL,password_salt VARCHAR(24) NOT NULL,password_iterations NUMERIC NOT NULL)',
   ];
@@ -207,8 +237,112 @@ pgc.connect()
 .then(createTables())
 .then(() => {
 
-  // Socket io connection
+  // Socket io private namespace
+  io.of('/private',socket => {
+    socket.on('history.request',data => {
+      pgc.query('SELECT * FROM video_audit WHERE username = $1',[socket.handshake.session.username],(err,history) => {
+        if(err) throw err;
+        socket.emit('history.response',history.rows);
+      });
+    });
+  }).use(express_socket_io_session).use(checkAuth);
+
+  // Socket io public namespace
+  io.of('/public').use(express_socket_io_session);
   io.of('/public',socket => {
+
+    socket.on('register.request',data => {
+      if(typeof data.username !== 'string' || data.username.length === 0){
+        socket.emit('toastr.error','Username is required');
+        return;
+      }
+
+      if(typeof data.password !== 'string' || data.password.length === 0){
+        socket.emit('toastr.error','Password is required');
+        return;
+      }
+
+      if(typeof data.password_confirmation !== 'string' || data.password_confirmation.length === 0){
+        socket.emit('toastr.error','Please confirm your password');
+        return;
+      }
+
+      if(data.password !== data.password_confirmation){
+        socket.emit('toastr.error','Passwords do not match');
+        return;
+      }
+
+      pgc.query('SELECT 1 FROM site_user WHERE username = $1',[data.username],(err,usernameTaken) => {
+          if(err) throw err;
+
+          if(typeof usernameTaken === 'undefined' || usernameTaken.rowCount === 1){
+            socket.emit('toastr.error','Username already taken');
+            return;
+          }
+
+          let salt = crypto.randomBytes(CONFIG.crypto.password.salt_bytes).toString('base64');
+          crypto.pbkdf2(data.password, salt, CONFIG.crypto.password.iterations, CONFIG.crypto.password.hash_bytes,'sha256',
+            (err,hash) => {
+              if(err) throw err;
+              else {
+                pgc.query('INSERT INTO site_user (username,password,password_salt,password_iterations) VALUES($1,$2,$3,$4) RETURNING username',[data.username,hash,salt,CONFIG.crypto.password.iterations],
+                  (err,userName) => {
+                    if(err) throw err;
+                    socket.handshake.session.auth = true;
+                    socket.handshake.session.username = userName.rows[0].username;
+                    socket.handshake.session.save();
+
+                    socket.emit('toastr.success',`Successfully registered as "${data.username}"`);
+                    socket.emit('register.response',true);
+                  }
+                );
+              }
+            }
+          );
+      });
+    });
+
+    socket.on('login.request',data => {
+      if(typeof data.username !== 'string' || data.username.length === 0){
+        socket.emit('toastr.error','Username is required');
+        return;
+      }
+
+      if(typeof data.password !== 'string' || data.password.length === 0){
+        socket.emit('toastr.error','Please enter password');
+        return;
+      }
+
+      pgc.query('SELECT * FROM site_user WHERE username = $1 LIMIT 1',[data.username],(err,userInfo) => {
+        if(err) throw err;
+        else if(userInfo && userInfo.rows.length){
+          crypto.pbkdf2(
+            data.password,
+            userInfo.rows[0].password_salt,
+            Number(userInfo.rows[0].password_iterations),
+            userInfo.rows[0].password.length,
+            'sha256',
+            (err,hashStr) => {
+              if(err) throw err;
+              else if(userInfo.rows[0].password.equals(hashStr)){
+
+                socket.handshake.session.auth = true;
+                socket.handshake.session.username = userInfo.rows[0].username;
+                socket.handshake.session.save();
+
+                socket.emit('toastr.success','Logged in');
+                socket.emit('login.response',true);
+              }else{
+                socket.emit('toastr.error','Invalid username or password');
+              }
+            }
+          );
+        }else{
+          socket.emit('toastr.error','Username not found');
+        }
+      });
+    });
+
     socket.on('audit.request',data => {
       let { url,pages } = data;
 
@@ -238,6 +372,12 @@ pgc.connect()
 
       socket.emit('audit.progress',{completed:0,total:pages?pages:'∞'});
       getPageComments(videoId,1,pages,null,[],socket,comments => {
+        if(socket.handshake.session.auth === true){
+          pgc.query('INSERT INTO video_audit (video_id,comments,audit_date,auditor_username) VALUES($1,$2,$3,$4)',[videoId,JSON.stringify(comments),new Date(),socket.handshake.session.username],(err) => {
+            if(err) throw err;
+          });
+        }
+
         socket.emit('audit.response',comments);
       });
 
