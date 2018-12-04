@@ -6,6 +6,10 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="/vender/bootswatch.min.css"> -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <!-- Loading-bar CSS -->
     <link rel="stylesheet" type="text/css" href="/css/loading-bar.css"/>
@@ -21,21 +25,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
   </head>
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">Navbar</a>
+  <nav class="navbar sticky-top  navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="/">Gefalscht</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item {{#if homeTab }}active{{/if}}">
-          <a class="nav-link" href="/home">Home <span class="sr-only">(current)</span></a>
+          <a class="nav-link" href="/home"><i class="fa fa-lg fa-home"></i> <span class="sr-only">(current)</span></a>
         </li>
         <li class="nav-item {{#if trendsTab }}active{{/if}}">
-          <a class="nav-link" href="/trends">Trends</a>
+          <a class="nav-link" href="/trends"><i class="fa fa-lg fa-chart-line"></i></a>
         </li>
         <li class="nav-item {{#if videoHistoryTab }}active{{/if}}">
-          <a class="nav-link" href="/video_history">Video History</a>
+          <a class="nav-link" href="/video_history"><i class="fa fa-lg fa-history"></i></a>
         </li>
         {{#if auth }}
         <li class="nav-item dropdown">
@@ -47,7 +51,7 @@
             <a class="dropdown-item" href="#">History</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="#">Settings</a>
-            <a id="signout-btn" class="dropdown-item">Sign-out</a>
+            <a id="signout-btn" class="dropdown-item" href="javascript:;">Sign-out</a>
           </div>
         </li>
         {{/if}}
@@ -64,8 +68,8 @@
       </ul>
       {{#if homeTab }}
       <form class="form-inline my-2 my-lg-0">
-        <input id="audit-url" class="form-control mr-sm-2" type="search" placeholder="Video Id or URL" aria-label="Video Id or URL">
-        <input id="num-audit-pages" type="number" class="form-control mr-sm-2" placeholder="Page limit"/>
+        <input id="audit-url" class="form-control mr-sm-2" type="search" placeholder="Video ID or URL" aria-label="Video ID or URL">
+        <input id="num-audit-pages" type="number" class="form-control mr-sm-2" placeholder="Page limit" style="width:7.5rem"/>
         <button id="audit-btn" class="btn btn-outline-success my-2 my-sm-0" type="button">Search</button>
       </form>
       {{/if}}

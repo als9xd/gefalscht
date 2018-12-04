@@ -25,3 +25,7 @@ table tbody tr td img{
 .toast-message a:hover {
     text-decoration: underline!important;
 }
+
+.jumbotron{
+  background: #c0d0ed;
+}

@@ -420,6 +420,9 @@ pgc.connect()
   app.get('/js/bootstrap.min.js',(req,res) => { res.sendFile(path.join(__dirname,'/node_modules/bootstrap/dist/js/bootstrap.min.js')); });
   app.get('/css/bootstrap.min.css',(req,res) => { res.sendFile(path.join(__dirname,'/node_modules/bootstrap/dist/css/bootstrap.min.css')); });
 
+  app.get('/vender/bootswatch.min.css',(req,res) => { res.sendFile(path.join(__dirname,'/public/vender/bootswatch.min.css')); });
+  app.get('/robot.gif',(req,res) => { res.sendFile(path.join(__dirname,'/public/robot.gif')); });
+
   // jQuery files
   app.get('/js/jquery.min.js',(req,res) => { res.sendFile(path.join(__dirname,'/node_modules/jquery/dist/jquery.min.js')); });
 
@@ -464,9 +467,12 @@ pgc.connect()
   });
 
   app.get('/trends',(req,res) => {
-    pgc.query('SELECT auditor_username,audit_date FROM video_audit',(err,videoAudits) => {
-      const stringifiedAudit = encodeURIComponent(JSON.stringify(videoAudits.rows));
-      res.render('trends',{trendsTab:true,auth:req.session.auth,username:req.session.username,videoAudits:stringifiedAudit});
+    pgc.query('SELECT a.* FROM yt_video a INNER JOIN ( SELECT video_id, COUNT(*) TotalCount FROM video_audit GROUP BY video_audit.video_id ) b ON a.id = b.video_id ORDER BY b.TotalCount DESC,a.id ASC LIMIT 4',(err,trendingVideos) => {
+      if(err) throw err;
+      pgc.query('SELECT auditor_username,audit_date FROM video_audit',(err,videoAudits) => {
+        const stringifiedAudit = encodeURIComponent(JSON.stringify(videoAudits.rows));
+        res.render('trends',{trendsTab:true,auth:req.session.auth,username:req.session.username,videoAudits:stringifiedAudit,trendingVideos:trendingVideos.rows});
+      });
     });
   });
 
