@@ -20,8 +20,12 @@ const express = require('express');
 const exphbs  = require('express-handlebars');
 const app = express();
 
+app.set('view options', { layout: 'main' });
 app.set('views', path.join(__dirname,'/public','views'));
-app.engine('handlebars', exphbs());
+app.engine('handlebars', exphbs({
+  defaultLayout: 'main',
+  layoutsDir: 'public/views/layouts'
+}));
 app.set('view engine', 'handlebars');
 
 const session = require('express-session')({
@@ -52,7 +56,7 @@ const io = require('socket.io')(server);
 
 function createTables(){
   const queries = [
-    'CREATE TABLE IF NOT EXISTS yt_video (id VARCHAR(11) PRIMARY KEY,category_id VARCHAR(24),category_name TEXT,upload_date TIMESTAMPTZ NOT NULL)',
+    'CREATE TABLE IF NOT EXISTS yt_video (id VARCHAR(11) PRIMARY KEY,title TEXT,thumbnail_url TEXT,category_id VARCHAR(24),tags TEXT[],upload_date TIMESTAMPTZ NOT NULL)',
     'CREATE TABLE IF NOT EXISTS yt_comment (id VARCHAR(26) PRIMARY KEY,user_id VARCHAR(24) NOT NULL,video_id VARCHAR(11) NOT NULL,original_text TEXT NOT NULL,publish_date_list TIMESTAMPTZ[] )',
     'CREATE TABLE IF NOT EXISTS yt_user (id VARCHAR(26) PRIMARY KEY,title TEXT,thumbnail_url TEXT,num_videos NUMERIC NOT NULL,num_playlists NUMERIC NOT NULL,num_subscribers NUMERIC NOT NULL,num_subscriptions NUMERIC,creation_date TIMESTAMPTZ NOT NULL)',
     'CREATE TABLE IF NOT EXISTS video_audit (id SERIAL PRIMARY KEY,video_id VARCHAR(11) NOT NULL,comments JSONB NOT NULL,audit_date TIMESTAMPTZ NOT NULL, auditor_username TEXT)',
@@ -310,7 +314,7 @@ pgc.connect()
       delete socket.handshake.session.auth;
       delete socket.handshake.session.username;
       socket.handshake.session.save();
-      
+
       socket.emit('toastr.success','Signed out');
       socket.emit('signout.response',true);
     });
@@ -383,17 +387,32 @@ pgc.connect()
         }
       }
 
-      socket.emit('audit.progress',{completed:0,total:pages?pages:'∞'});
-      getPageComments(videoId,1,pages,null,[],socket,comments => {
-        if(socket.handshake.session.auth === true){
-          pgc.query('INSERT INTO video_audit (video_id,comments,audit_date,auditor_username) VALUES($1,$2,$3,$4)',[videoId,JSON.stringify(comments),new Date(),socket.handshake.session.username],(err) => {
-            if(err) throw err;
-          });
+      request({
+        method: 'GET',
+        uri: 'https://www.googleapis.com/youtube/v3/videos',
+        json: true,
+        qs: {
+          part: 'snippet',
+          id: videoId,
+          key: process.env.YT_API_KEY,
         }
-
-        socket.emit('audit.response',comments);
+      },(err,response,body) => {
+        if(err) throw err;
+        pgc.query('INSERT INTO yt_video (id,title,thumbnail_url,tags,upload_date) VALUES ($1,$2,$3,$4,$5) ON CONFLICT(id) DO UPDATE SET title = $2,thumbnail_url = $3, tags = $4, upload_date = $5',[videoId,body.items[0].snippet.title,body.items[0].snippet.thumbnails.high.url,body.items[0].snippet.tags,body.items[0].snippet.publishedAt],err => {
+          if(err) throw err;
+          socket.emit('audit.progress',{completed:0,total:pages?pages:'∞'});
+          getPageComments(videoId,1,pages,null,[],socket,comments => {
+            if(socket.handshake.session.auth === true){
+              pgc.query('INSERT INTO video_audit (video_id,comments,audit_date,auditor_username) VALUES($1,$2,$3,$4)',[videoId,JSON.stringify(comments),new Date(),socket.handshake.session.username],(err) => {
+                if(err) throw err;
+                socket.emit('audit.response',comments);
+              });
+            }else{
+              socket.emit('audit.response',comments);
+            }
+          });
+        });
       });
-
     });
   });
 
@@ -415,8 +434,44 @@ pgc.connect()
   // Main CSS file
   app.get('/css/styles.css',(req,res) => { res.sendFile(path.join(__dirname,'public','css','styles.css')); });
 
-  app.get('/', (req,res) => {
-    res.render('index',{auth:req.session.auth,username:req.session.username});
+  app.get('/',(req,res) => {
+    res.redirect('home');
+  });
+
+  app.get('/home', (req,res) => {
+    const _sendHistory = (videoAudit) => {
+      if(req.session.auth){
+        pgc.query('SELECT *,video_audit.id as audit_id FROM video_audit INNER JOIN yt_video ON video_audit.video_id = yt_video.id WHERE auditor_username = $1',[req.session.username],(err,history) => {
+          if(err) throw err;
+          res.render('home',{homeTab:true,auth:req.session.auth,username:req.session.username,history:history.rows,videoAudit});
+        });
+      }else{
+        res.render('home',{homeTab:true,auth:req.session.auth,username:req.session.username,videoAudit});
+      }
+    }
+    if(typeof req.query.audit !== 'undefined'){
+      pgc.query('SELECT comments FROM video_audit WHERE id = $1 LIMIT 1',[req.query.audit],(err,videoAudit) => {
+        if(err) throw err;
+        if(videoAudit.rows && videoAudit.rows.length){
+          _sendHistory(encodeURIComponent(JSON.stringify(videoAudit.rows[0].comments)));
+        }else{
+          _sendHistory();
+        }
+      })
+    }else{
+      _sendHistory();
+    }
+  });
+
+  app.get('/trends',(req,res) => {
+    pgc.query('SELECT auditor_username,audit_date FROM video_audit',(err,videoAudits) => {
+      const stringifiedAudit = encodeURIComponent(JSON.stringify(videoAudits.rows));
+      res.render('trends',{trendsTab:true,auth:req.session.auth,username:req.session.username,videoAudits:stringifiedAudit});
+    });
+  });
+
+  app.get('/video_history',(req,res) => {
+    res.render('video_history',{videoHistoryTab:true,auth:req.session.auth,username:req.session.username});
   });
 
   server.listen(process.env.PORT,()=>{

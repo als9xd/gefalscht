@@ -1,0 +1,63 @@
+
+<link rel="stylesheet" href="/bower_components/bootstrap-horizon/bootstrap-horizon.css">
+
+<div class="row">
+  <div class="col">
+    <div class="container-fluid">
+      <div class="row flex-row flex-nowrap">
+        {{#each trendingVideo}}
+        <div class="col-3">
+            <div class="card card-block">Card</div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col">
+    <canvas id="audits-chart" width="400" height="400"></canvas>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.min.js"></script>
+<script>
+  const auditsBlob = decodeURIComponent("{{{videoAudits}}}");
+  const audits = auditsBlob === ''?null:JSON.parse(auditsBlob).map(a => moment(a.audit_date).startOf('hour'));
+  let auditsHash = {};
+  for(let i = 0; i < audits.length;i++){
+    const k = audits[i];
+    if(typeof auditsHash[k] === 'undefined'){
+      auditsHash[k] = 1;
+    }else{
+      auditsHash[k]++;
+    }
+  }
+  auditsHash = Object.keys(auditsHash).map(key=>{return {x:key,y:auditsHash[key]}});
+  const ctx = $('#audits-chart');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        datasets: [
+            {
+                label: 'Audits',
+                data: auditsHash,
+                fill: false,
+                borderColor: 'red'
+            },
+        ]
+    },
+    options: {
+       scales: {
+           xAxes: [{
+               type: 'time',
+               time: {
+                 unit: 'hour',
+                    displayFormats: {
+                       quarter: 'hA'
+                   }
+               }
+           }]
+       }
+   }
+  });
+</script>
