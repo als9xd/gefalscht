@@ -17,7 +17,12 @@ const path = require('path');
 const request = require('request');
 
 const express = require('express');
+const exphbs  = require('express-handlebars');
 const app = express();
+
+app.set('views', path.join(__dirname,'/public','views'));
+app.engine('handlebars', exphbs());
+app.set('view engine', 'handlebars');
 
 const session = require('express-session')({
   secret: CONFIG.server.secret,
@@ -301,6 +306,14 @@ pgc.connect()
           );
       });
     });
+    socket.on('signout.request',() => {
+      delete socket.handshake.session.auth;
+      delete socket.handshake.session.username;
+      socket.handshake.session.save();
+      
+      socket.emit('toastr.success','Signed out');
+      socket.emit('signout.response',true);
+    });
 
     socket.on('login.request',data => {
       if(typeof data.username !== 'string' || data.username.length === 0){
@@ -403,7 +416,7 @@ pgc.connect()
   app.get('/css/styles.css',(req,res) => { res.sendFile(path.join(__dirname,'public','css','styles.css')); });
 
   app.get('/', (req,res) => {
-    res.sendFile(path.join(__dirname,'public','index.html'));
+    res.render('index',{auth:req.session.auth,username:req.session.username});
   });
 
   server.listen(process.env.PORT,()=>{

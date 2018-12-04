@@ -19,15 +19,24 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/css/styles.css">
   </head>
+
   <!-- Button trigger modal -->
+  {{#unless auth }}
   <button type="button" class="btn" data-toggle="modal" data-target="#login-modal">
     Login
   </button>
-
   <!-- Button trigger modal -->
   <button type="button" class="btn" data-toggle="modal" data-target="#register-modal">
     Sign-up
   </button>
+  {{else}}
+  <button id="profile-btn" type="button" class="btn" data-toggle="modal">
+    View {{ username }}'s Profile
+  </button>
+  <button id="signout-btn" type="button" class="btn" data-toggle="modal">
+    Sign-out
+  </button>
+  {{/unless}}
 
   <body>
     <div class="container">
@@ -258,6 +267,7 @@
     <script type="text/javascript">
 
       $('#login-btn').click(event => {
+          public_ns.once('login.response',success => { if(success) window.location.reload(); });
           public_ns.emit('login.request',{
             username: $('#login-username').val(),
             password: $('#login-password').val(),
@@ -266,11 +276,17 @@
       });
 
       $('#register-btn').click(event => {
+          public_ns.once('register.response',success => { if(success) window.location.reload(); });
           public_ns.emit('register.request',{
             username: $('#register-username').val(),
             password: $('#register-password').val(),
             password_confirmation: $('#register-password-conf').val(),
           });
+      });
+
+      $('#signout-btn').click(event => {
+        public_ns.once('signout.response',success => { if(success) window.location.reload(); });
+        public_ns.emit('signout.request');
       });
 
       private_ns.on('toastr.error',msg => {
