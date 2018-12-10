@@ -64,6 +64,22 @@
     {{/if}}
   </div>
 
+  <div id="comments-progress-row" class="row my-3 d-none">
+    <div class="col-2">
+      <div id="comments-progress-bar-text"></div>
+    </div>
+    <div class="col-10">
+      <div id="comments-progress-bar" class="ldBar label-center" data-value="0" data-preset="line" data-aspect-ratio="none" style="width:100%;"></div>
+    </div>
+  </div>
+  <div id="users-progress-row" class="row my-3 d-none">
+    <div class="col-2">
+      <div id="users-progress-bar-text"></div>
+    </div>
+    <div class="col-10">
+      <div id="users-progress-bar" class="ldBar label-center" data-value="0" data-preset="line" data-aspect-ratio="none" style="width:100%;"></div>
+    </div>
+  </div>
   <div class="row mt-4">
     <div class="col">
       <form id="bot-rules-form" class="px-4 d-none">
@@ -150,37 +166,27 @@
         </div>
       </div>
     </div>
-    <div class="col mb-3">
-      <div id="progress-row" class="row my-3 d-none">
-        <div class="col-2">
-          <div id="progress-bar-text"></div>
-        </div>
-        <div class="col-10">
-          <div id="progress-bar" class="ldBar label-center" data-value="0" data-preset="line" data-aspect-ratio="none" style="width:100%;"></div>
-        </div>
-      </div>
-      <div id="comments-table-row" class="row mt-3 d-none">
-        <div class="col">
-          <h1>Comments</h1>
-          <table id="comments-table" class="table table-dark">
-            <thead>
-              <tr>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th>Comment</th>
-                <th>Channel Creation Date</th>
-                <th>Playlists</th>
-                <th>Subscribers</th>
-                <th>Subscriptions</th>
-                <th>Videos</th>
-              </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
-        </div>
-      </div>
+  </div>
+  <div id="comments-table-row" class="row my-3 d-none">
+    <div class="col">
+      <h1>Comments</h1>
+      <table id="comments-table" class="table table-dark">
+        <thead>
+          <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th>Comment</th>
+            <th>Channel Creation Date</th>
+            <th>Playlists</th>
+            <th>Subscribers</th>
+            <th>Subscriptions</th>
+            <th>Videos</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -330,29 +336,55 @@
         borderWidth: 1
       });
       comparisonPercentagesChart.update();
-    })
-
-    // Clear the comments table
-    $('#comments-table tbody').html('');
-
-    // Loop through each recieved comment
-    for(let i = 0; i < comments.length;i++){
-      // Create a new row for each comment and push it onto the table
-      $('#comments-table tbody').append(`
-      <tr>
-        <td>${comments[i].isBot?'<i class="fa fa-lg fa-robot"></i>':'<i class="fa fa-lg fa-user"></i>'}</td>
-        <td><img src="${comments[i].user.thumbnail_url}" /></td>
-        <td style="font-weight:bold"><a href="https://youtube.com/channel/${comments[i].user.id}">${comments[i].user.title}</a></td>
-        <td>${comments[i].comment.original_text}</td>
-        <td>${moment(comments[i].user.creation_date).format('YYY-MM-DD hh:mm:ss a')}</td>
-        <td>${comments[i].user.num_playlists}</td>
-        <td>${comments[i].user.num_subscribers}</td>
-        <td>${comments[i].user.num_subscriptions===null?"private":comments[i].user.num_subscriptions}</td>
-        <td>${comments[i].user.num_videos}</td>
-      </tr>
-      `);
+    });
+    if ( $.fn.DataTable.isDataTable('#comments-table') ) {
+      $('#comments-table').DataTable().destroy();
     }
-    $('#comments-table').DataTable();
+
+    $('#comments-table').DataTable({
+      columns: [
+        {
+          title: '',
+        },
+        {
+          title: '',
+        },
+        {
+          title: '',
+        },
+        {
+          title: '',
+        },
+        {
+          title:'Account Creation Date',
+        },
+        {
+          title:'# Playlists',
+        },
+        {
+          title:'# Subscribers',
+        },
+        {
+          title:'# Subscriptions',
+        },
+        {
+          title:'# Videos',
+        }
+      ],
+      data: comments.map(comment => {
+        return [
+          `<img src="${comment.user.thumbnail_url}" />`,
+          `${comment.isBot?'<i class="fa fa-lg fa-robot"></i>':'<i class="fa fa-lg fa-user"></i>'}`,
+          `<a style="font-weight:bold" href="https://youtube.com/channel/${comment.user.id}">${comment.user.title}</a>`,
+          comment.comment.original_text,
+          moment(comment.user.creation_date).format('YYY-MM-DD hh:mm:ss a'),
+          comment.user.num_playlists,
+          comment.user.num_subscribers,
+          comment.user.num_subscriptions===null?"private":comment.user.num_subscriptions,
+          comment.user.num_videos,
+        ]
+      })
+    });
 
     // Show the comments table by removing the bootstrap CSS class "d-none"
     $('#bot-rules-form').removeClass('d-none');
@@ -388,23 +420,38 @@
     createCommentsTable(comments);
   });
 
-  // Create progress/loading bar to show user video auditing progress
-  const loadingBar = new ldBar('#progress-bar');
 
   // When backend message named "audit.progress" is recieved
   public_ns.on('audit.progress',data => {
 
     // Get the variables data.completed and data.total
-    const { completed,total } = data;
+    const { currentUser,totalUsers,currentComment,totalComments } = data;
+    if(totalUsers){
+      // Create progress/loading bar to show user video auditing progress
+      const loadingBar = new ldBar('#users-progress-bar');
 
-    // Show the progress information by removing the bootstrap CSS class "d-none"
-    $('#progress-row').removeClass('d-none');
+      // Show the progress information by removing the bootstrap CSS class "d-none"
+      $('#users-progress-row').removeClass('d-none');
 
-    // Update the progress text
-    $('#progress-bar-text').html(`<strong>Progress:</strong>&nbsp${completed}/${total}`);
+      // Update the progress text
+      $('#users-progress-bar-text').html(`<strong>Users:</strong>&nbsp${currentUser}/${totalUsers}`);
+      // Update the loading/progress bar
+      loadingBar.set((currentUser/totalUsers)*100);
+    }
+    if(totalComments){
+      // Create progress/loading bar to show user video auditing progress
+      const loadingBar = new ldBar('#comments-progress-bar');
 
-    // Update the loading/progress bar
-    loadingBar.set((completed/total)*100);
+      // Show the progress information by removing the bootstrap CSS class "d-none"
+      $('#comments-progress-row').removeClass('d-none');
+
+      // Update the progress text
+      $('#comments-progress-bar-text').html(`<strong>Comments:</strong>&nbsp${currentComment}/${totalComments}`);
+      // Update the loading/progress bar
+      loadingBar.set((currentComment/totalComments)*100);
+
+    }
+
   });
 
   // When the "Submit" button is clicked by the user
@@ -420,10 +467,9 @@
     requestCommentsTable();
 
     // Hide the comments table by adding the bootstrap CSS class "d-none"
+    $('#bot-rules-form').addClass('d-none');
     $('#comments-table-row').addClass('d-none');
-
-    // Set the loading/progress bar to 0
-    loadingBar.set(0);
+    $('#results-row').addClass('d-none');
   });
 
 

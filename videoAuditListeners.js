@@ -41,7 +41,7 @@ module.exports = (socket,pgClient) => {
 
     // Audit a video
     'audit.request': (data) => {
-      
+
       // If it is an existing audit
       if(typeof data.auditId !== 'undefined'){
         return new Promise((resolve,reject) => {
@@ -116,28 +116,47 @@ module.exports = (socket,pgClient) => {
       // Get all the comments
       .then(() => ytInterface.getPageComments(videoId))
       // Store each comment into db
-      .then((comments) =>
-        Promise.all(
-          comments.map((comment) =>
-            new Promise((resolve,reject) => {
-              pgClient.query('INSERT INTO yt_comment (id,user_id,video_id,original_text,publish_date_list) VALUES($1,$2,$3,$4,$5) ON CONFLICT (id) DO UPDATE SET id=yt_comment.id RETURNING *',
-              [
-               comment.id,
-               comment.snippet.topLevelComment.snippet.authorChannelId.value,
-               comment.snippet.topLevelComment.snippet.videoId,
-               comment.snippet.topLevelComment.snippet.textOriginal,
-               [comment.snippet.topLevelComment.snippet.publishedAt,comment.snippet.topLevelComment.snippet.updatedAt],
-             ],(err,results) => {
-               if(err) reject(err);
-               resolve(results.rows[0]);
-             });
-            })
-          )
-        )
-      )
+      .then((results) =>{
+        let pagesRetrieved = 0;
+        let currentComment = 0;
+        function _getPageComments(lastPageComments,nextPageToken){
+          if(!nextPageToken || (data.pages && ++pagesRetrieved > data.pages)) return Promise.resolve(lastPageComments);
+          return ytInterface.getPageComments(videoId,nextPageToken)
+          .then((results) => {
+            const { comments, nextPageToken} = results;
+            return Promise.all(
+              comments.map((comment) =>
+                new Promise((resolve,reject) => {
+                  pgClient.query('INSERT INTO yt_comment (id,user_id,video_id,original_text,publish_date_list) VALUES($1,$2,$3,$4,$5) ON CONFLICT (id) DO UPDATE SET id=yt_comment.id RETURNING *',
+                  [
+                   comment.id,
+                   comment.snippet.topLevelComment.snippet.authorChannelId.value,
+                   comment.snippet.topLevelComment.snippet.videoId,
+                   comment.snippet.topLevelComment.snippet.textOriginal,
+                   [comment.snippet.topLevelComment.snippet.publishedAt,comment.snippet.topLevelComment.snippet.updatedAt],
+                 ],(err,results) => {
+                   if(err) reject(err);
+                   socket.emit('audit.progress',{currentComment:++currentComment,totalComments:data.pages?20*data.pages:'∞'});
+                   resolve({comments:results.rows[0],nextPageToken});
+                 });
+                })
+              )
+            );
+          })
+          .then((results) => {
+            const comments = results.map(c=>c.comments);
+            const nextPageToken = results.map(c=>c.nextPageToken)[0];
+            if(pagesRetrieved===1) lastPageComments = [];
+            return _getPageComments([...comments,...lastPageComments],nextPageToken);
+          });
+        }
+
+        return _getPageComments(results.comments,results.nextPageToken);
+      })
       // Store each comment's user info db
-      .then((comments) =>
-        Promise.all(
+      .then((comments) => {
+        let currentUser = 0;
+        return Promise.all(
           comments.map((comment) =>
             Promise.all(
               [
@@ -168,13 +187,14 @@ module.exports = (socket,pgClient) => {
                 ],
                 (err,results) => {
                   if(err) reject(err);
+                  socket.emit('audit.progress',{currentUser:++currentUser,totalUsers:comments.length});
                   resolve({comment,user:results.rows[0]});
                 }
               );
             }))
           )
         )
-      )
+      })
       // Store a snapshot of the audit into the db
       .then((comments) =>
         new Promise((resolve,reject) => {

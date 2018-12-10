@@ -31,7 +31,7 @@ class YTInterface {
       }
     })
     .then((response) => {
-      return Promise.resolve(response.items);
+      return Promise.resolve({nextPageToken:response.nextPageToken,comments:response.items});
     });
   }
 
