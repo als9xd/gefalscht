@@ -1,16 +1,7 @@
-table tbody tr {
-  border-bottom: 1px solid grey;
-}
-table tbody td {
-  border-left: 1px solid lightgrey;
-  border-right: 1px solid lightgrey;
-}
 
-table tbody tr:first-child {
-  border-top: none;
-}
-table tbody tr:last-child {
-  border-bottom: none;
+table tbody td {
+  background: : #32383e;
+  color: black;
 }
 
 table tbody tr td img{

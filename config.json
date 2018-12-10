@@ -1,0 +1,12 @@
+{
+  "crypto": {
+    "password": {
+      "hash_bytes": 32,
+      "salt_bytes": 16,
+      "iterations": 872791
+    }
+  },
+  "server": {
+    "secret": "Change me!"
+  }
+}

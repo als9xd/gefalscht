@@ -1,235 +1,431 @@
 
-      <div class="jumbotron text-center p-1" style="border-top-left-radius: 0;border-top-right-radius: 0;">
-        <div class="row" style="overflow:hidden;">
-          <div class="col-md-4">
-            <img src="/robot.gif" class="my-2" style="height:7rem;width:10rem;"/>
-          </div>
-          <div class="col mt-3 text-center animated bounceInRight">
-            <h1>Welcome!</h1>
-            <p>See if you can find where the bots are hiding...</p>
-          </div>
-        </div>
-
+  <div class="jumbotron text-center p-1" style="border-top-left-radius: 0;border-top-right-radius: 0;">
+    <div class="row" style="overflow:hidden;">
+      <div class="col-md-4">
+        <img src="/robot.gif" class="my-2" style="height:7rem;width:10rem;"/>
       </div>
+      <div class="col mt-3 text-center animated bounceInRight">
+        <h1>Welcome!</h1>
+        <p>See if you can find where the bots are hiding...</p>
+      </div>
+    </div>
+  </div>
 
-      <div class="row">
-        <div class="col">
-          <h3>Classification Rules</h3>
-          <form class="px-4" id="bot-rules-form">
-            <div class="form-group">
-              <input id="created-before-rule" class="form-check-input" type="checkbox"/>
-              <label class="form-check-label" for="created-before-rule">Created Before: <input id="created-before-input" type="number" class="form-control form-control-sm input-sm"/></label>
-            </div>
-            <div class="form-group">
-              <input id="created-after-rule" class="form-check-input" type="checkbox" checked/>
-              <label class="form-check-label" for="created-after-rule">Created After: <input id="created-after-input" type="number" class="form-control form-control-sm input-sm" value="2014"/></label>
-            </div>
-            <div class="form-group">
-              <input id="video-uploads-rule" class="form-check-input" type="checkbox" checked/>
-              <label class="form-check-label" for="video-uploads-rule">Has Uploaded Videos</label>
-            </div>
-            <div class="form-group">
-              <input id="playlists-rule" class="form-check-input" type="checkbox" checked/>
-              <label class="form-check-label" for="playlists-rule">No Playlists</label>
-            </div>
-            <div class="form-group">
-              <input id="subscribers-rule" class="form-check-input" type="checkbox"/>
-              <label class="form-check-label" for="subscribers-rule">Has Subscribers</label>
-            </div>
-            <div class="form-group">
-              <input id="subscriptions-rule" class="form-check-input" type="checkbox" checked/>
-              <label class="form-check-label" for="subscriptions-rule">No Subscriptions</label>
-            </div>
-          </form>
-        </div>
-        {{#if auth}}
-        <div class="col">
-          <h3>History</h3>
-          <ul class="list-group">
-          {{#each history}}
-            <li class="list-group-item">
-              <div class="row">
-                <div class="col-md-2">
-                  <img class="d-inline" style="height:2rem;width:2rem;" src="{{this.thumbnail_url}}" />
-                </div>
-                <div class="col">
+  <div class="row">
+    <div class="col mt-4" style="min-width:50rem;">
+      <h1>Popular Videos</h1>
+      <div class="container-fluid">
+        <div class="row flex-row flex-nowrap">
+          {{#each trendingVideos}}
+          <div class="col-3">
+              <div class="card card-block">
+                <img class="card-img-top" src="{{this.thumbnail_url}}" alt="Card image cap">
+                <div class="card-body">
+                  <h5 class="card-title text-center"><a href="https://www.youtube.com/watch?v={{this.id}}">{{this.title}}</a></h5>
                   <div class="row">
-                    <div class="col">
-                      <a href="/home?audit={{this.audit_id}}">{{this.title}}</a>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col">
-                      <script>document.write(moment('{{this.audit_date}}').format('YYYY-MM-DD hh:mm:ss a'))</script>
+                    <div class="col text-right">
+                      <small><script>document.write(moment('{{this.upload_date}}').format('YYYY-MM-DD hh:mm:ss a'))</script></small>
                     </div>
                   </div>
                 </div>
               </div>
-            </li>
+          </div>
           {{/each}}
-          </ul>
-        </div>
-        {{/if}}
-      </div>
-      <div class="row">
-        <div class="col">
-          <div id="progress-row" class="row my-3 d-none">
-            <div class="col-2">
-              <div id="progress-bar-text"></div>
-            </div>
-            <div class="col-10">
-              <div id="progress-bar" class="ldBar label-center" data-value="0" data-preset="line" data-aspect-ratio="none" style="width:100%;"></div>
-            </div>
-          </div>
-          <div class="row mt-3">
-            <div class="col">
-              <table id="comments-table" class="table table-dark d-none">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th>Comment</th>
-                    <th>Channel Creation Date</th>
-                    <th>Playlists</th>
-                    <th>Subscribers</th>
-                    <th>Subscriptions</th>
-                    <th>Videos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
       </div>
     </div>
+    {{#if auth}}
+    <div class="col mt-4">
+      <h1>Recent History</h1>
+      <ul class="list-group">
+      {{#each history}}
+        <li class="list-group-item">
+          <div class="row">
+            <div class="col-md-2">
+              <img class="d-inline" style="height:2rem;width:2rem;" src="{{this.thumbnail_url}}" />
+            </div>
+            <div class="col">
+              <div class="row">
+                <div class="col">
+                  <a href="/home?audit={{this.audit_id}}">{{this.title}}</a>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col">
+                  <script>document.write(moment('{{this.audit_date}}').format('YYYY-MM-DD hh:mm:ss a'))</script>
+                </div>
+              </div>
+            </div>
+          </div>
+        </li>
+      {{/each}}
+      </ul>
+    </div>
+    {{/if}}
+  </div>
 
-    <script>
-      const auditCommentsBlob = decodeURIComponent("{{{videoAudit}}}");
-      const auditComments = auditCommentsBlob === ''?null:JSON.parse(auditCommentsBlob);
+  <div class="row mt-4">
+    <div class="col">
+      <form id="bot-rules-form" class="px-4 d-none">
+        <h1>Bot Classification Rules</h1>
+        <div id="created-before-rule" class="form-group">
+          <h5>Account Creation Date (year)</h5>
+          <div class="row">
+            <div class="col">
+              <label id="created-after-rule" class="form-check-label" for="created-after-rule-input"><small>After:</small>
+                <input id="created-after-rule-input" type="number" class="form-control form-control-sm input-sm" value="2014"/>
+              </label>
+              <label id="created-before-rule" class="form-check-label" for="created-before-rule-input"><small>Before:</small>
+                <input id="created-before-rule-input" type="number" class="form-control form-control-sm input-sm"/>
+              </label>
+            </div>
+          </div>
+        </div>
 
-      function isBot(comment){
-        if($('#created-before-rule').is(':checked') && Number(comment.user.creation_date.slice(0,4)) >= Number($('#created-before-input').val())){
-          return false;
-        }
-        if($('#created-after-rule').is(':checked') && Number(comment.user.creation_date.slice(0,4)) < Number($('#created-after-input').val())){
-          return false;
-        }
-        if($('#video-uploads-rule').is(':checked') && Number(comment.user.num_videos) > 0){
-          return false;
-        }
-        if($('#playlists-rule').is(':checked') && Number(comment.user.num_playlists) !== 0){
-          return false;
-        }
-        if($('#subscribers-rule').is(':checked') && Number(comment.user.num_subscribers) > 0){
-          return false;
-        }
-        if($('#subscriptions-rule').is(':checked') && Number(comment.user.num_subscriptions) !== 0){
-          return false;
-        }
-        return true;
+        <div id="video-uploads-rule" class="form-group">
+          <h5>Uploaded Videos</h5>
+          <div class="row">
+            <div class="col">
+              <label id="video-uploads-min-rule" class="form-check-label" for="video-uploads-min-rule-input"><small>Min:</small>
+                <input id="video-uploads-min-rule-input" type="number" class="form-control form-control-sm input-sm" value="1"/>
+              </label>
+              <label id="video-uploads-max-rule" class="form-check-label" for="video-uploads-max-rule-input"><small>Max:</small>
+                <input id="video-uploads-max-rule-input" type="number" class="form-control form-control-sm input-sm"/>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="playlists-rule" class="form-group">
+          <h5>Saved Playlists</h5>
+          <div class="row">
+            <div class="col">
+              <label id="playlists-min-rule" class="form-check-label" for="playlists-min-rule-input"><small>Min:</small>
+                <input id="playlists-min-rule-input" type="number" class="form-control form-control-sm input-sm"/>
+              </label>
+              <label id="playlists-max-rule" class="form-check-label" for="playlists-max-rule-input"><small>Max:</small>
+                <input id="playlists-max-rule-input" type="number" class="form-control form-control-sm input-sm" value="0"/>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="subscribers-rule" class="form-group">
+          <h5>Subscribers</h5>
+          <div class="row">
+            <div class="col">
+              <label id="subscribers-min-rule" class="form-check-label" for="subscribers-min-rule-input"><small>Min:</small>
+                <input id="subscribers-min-rule-input" type="number" class="form-control form-control-sm input-sm"/>
+              </label>
+              <label id="subscribers-max-rule" class="form-check-label" for="subscribers-max-rule-input"><small>Max:</small>
+                <input id="subscribers-max-rule-input" type="number" class="form-control form-control-sm input-sm" value="200"/>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <h5>Subscriptions</h5>
+          <div class="row">
+            <div class="col">
+              <label id="subscriptions-min-rule" class="form-check-label" for="subscriptions-min-rule-input"><small>Min:</small>
+                <input id="subscriptions-min-rule-input" type="number" class="form-control form-control-sm input-sm"/>
+              </label>
+              <label id="subscriptions-max-rule" class="form-check-label" for="subscriptions-max-rule-input"><small>Max:</small>
+                <input id="subscriptions-max-rule-input" type="number" class="form-control form-control-sm input-sm"/>
+              </label>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div id="results-row" class="col d-none">
+      <h1>Results</h1>
+      <div class="row">
+        <div class="col">
+          <canvas id="audits-comparison-chart" height="400"></canvas>
+        </div>
+        <div class="col">
+          <canvas id="audits-comparison-percentages-chart" height="400"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col mb-3">
+      <div id="progress-row" class="row my-3 d-none">
+        <div class="col-2">
+          <div id="progress-bar-text"></div>
+        </div>
+        <div class="col-10">
+          <div id="progress-bar" class="ldBar label-center" data-value="0" data-preset="line" data-aspect-ratio="none" style="width:100%;"></div>
+        </div>
+      </div>
+      <div id="comments-table-row" class="row mt-3 d-none">
+        <div class="col">
+          <h1>Comments</h1>
+          <table id="comments-table" class="table table-dark">
+            <thead>
+              <tr>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th>Comment</th>
+                <th>Channel Creation Date</th>
+                <th>Playlists</th>
+                <th>Subscribers</th>
+                <th>Subscriptions</th>
+                <th>Videos</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.min.js"></script>
+<script>
+
+  let activeAuditId = null;
+
+  function requestCommentsTable(auditId){
+    public_ns.emit('audit.request',{
+      auditId,
+      pages: $('#num-audit-pages').val(),
+      url: $('#audit-url').val(),
+      settings: {
+        creation_date: [$('#created-before-rule-input').val(),$('#created-after-rule-input').val()],
+        num_videos: [$('#video-uploads-min-rule-input').val(),$('#video-uploads-max-rule-input').val()],
+        num_playlists: [$('#playlists-min-rule-input').val(),$('#playlists-max-rule-input').val()],
+        num_subscribers: [$('#subscribers-min-rule-input').val(),$('#subscribers-max-rule-input').val()],
+        num_subscriptions:  [$('#subscriptions-min-rule-input').val(),$('#subscriptions-max-rule-input').val()],
       }
+    });
+  }
+  let comparisonChart,comparisonPercentagesChart = null;
+  function createCommentsTable(comments){
+    const numBots = comments.filter(c=>c.isBot).length;
+    const numHumans = comments.filter(c=>!c.isBot).length;
 
-      function createCommentsTable(comments){
-        // Clear the comments table
-        $('#comments-table tbody').html('');
-
-        // Loop through each recieved comment
-        for(let i = 0; i < comments.length;i++){
-          // Create a new row for each comment and push it onto the table
-          $('#comments-table tbody').append(`
-          <tr>
-            <td>${isBot(comments[i])?'<i class="fa fa-lg fa-robot"></i>':'<i class="fa fa-lg fa-user"></i>'}</td>
-            <td><img src="${comments[i].user.thumbnail_url}" /></td>
-            <td style="font-weight:bold"><a href="https://youtube.com/channel/${comments[i].user.id}">${comments[i].user.title}</a></td>
-            <td>${comments[i].comment.original_text}</td>
-            <td>${moment(comments[i].user.creation_date).format('YYY-MM-DD hh:mm:ss a')}</td>
-            <td>${comments[i].user.num_playlists}</td>
-            <td>${comments[i].user.num_subscribers}</td>
-            <td>${comments[i].user.num_subscriptions===null?"private":comments[i].user.num_subscriptions}</td>
-            <td>${comments[i].user.num_videos}</td>
-          </tr>
-          `);
+    if(comparisonChart) comparisonChart.destroy();
+    comparisonChart = new Chart(document.getElementById('audits-comparison-chart'), {type: 'bar',
+      data: {
+        labels: ["# Bots", "# Humans"],
+        datasets: [
+          {
+            label: 'This video',
+            data: [numBots,numHumans],
+            backgroundColor: [
+              'rgba(255, 99, 132, 0.2)',
+              'rgba(54, 162, 235, 0.2)',
+            ],
+            borderColor: [
+              'rgba(255,99,132,1)',
+              'rgba(54, 162, 235, 1)',
+            ],
+            borderWidth: 1
+          },
+        ]
+      },
+      options: {
+        responsive: false,
+        scales: {
+          xAxes: [{
+            ticks: {
+              maxRotation: 90,
+              minRotation: 80
+            }
+          }],
+          yAxes: [{
+            ticks: {
+              beginAtZero: true
+            }
+          }]
         }
-
-        // Show the comments table by removing the bootstrap CSS class "d-none"
-        $('#comments-table').removeClass('d-none');
       }
+    });
 
-      let activeComments = [];
-
-      $('#bot-rules-form input[type="checkbox"]').on('input',() => {
-        if(activeComments.length){
-          createCommentsTable(activeComments);
-          toastr.clear();
-          toastr.success('Table updated');
+    if(comparisonPercentagesChart) comparisonPercentagesChart.destroy();
+    comparisonPercentagesChart = new Chart(document.getElementById('audits-comparison-percentages-chart'), {type: 'bar',
+      data: {
+        labels: ["% Bots"],
+        datasets: [
+          {
+            label: 'This video',
+            data: [numBots/numHumans*100],
+            backgroundColor: [
+              'rgba(255, 206, 86, 0.2)',
+            ],
+            borderColor: [
+              'rgba(255, 206, 86, 1)',
+            ],
+            borderWidth: 1
+          },
+        ]
+      },
+      options: {
+        responsive: false,
+        scales: {
+          xAxes: [{
+            ticks: {
+              maxRotation: 90,
+              minRotation: 80
+            }
+          }],
+          yAxes: [{
+            ticks: {
+              max: 100,
+              min: 0,
+              beginAtZero: true
+            }
+          }]
         }
-      });
-      if(auditComments){
-        activeComments = auditComments;
-        createCommentsTable(auditComments);
       }
-    </script>
+    });
 
 
-    <!-- Used for creating progress/loading bars -->
-    <script type="text/javascript" src="/js/loading-bar.js"></script>
+    public_ns.emit('audit_averages.request',{
+      creation_date: [$('#created-before-rule-input').val(),$('#created-after-rule-input').val()],
+      num_videos: [$('#video-uploads-min-rule-input').val(),$('#video-uploads-max-rule-input').val()],
+      num_playlists: [$('#playlists-min-rule-input').val(),$('#playlists-max-rule-input').val()],
+      num_subscribers: [$('#subscribers-min-rule-input').val(),$('#subscribers-max-rule-input').val()],
+      num_subscriptions:  [$('#subscriptions-min-rule-input').val(),$('#subscriptions-max-rule-input').val()],
+    });
 
-    <script type="text/javascript">
-
-      private_ns.on('history.response',history => {
-        toastr.success(`Instead of showing this notification build a gui from this data ${JSON.stringify(history)}`);
+    public_ns.once('audit_averages.response',(data) => {
+      if(comparisonChart.data.datasets.length > 1){
+        comparisonChart.data.datasets.pop();
+      }
+      comparisonChart.data.datasets.push({
+        label: 'Average',
+        data: [data.totalBots,data.totalHumans],
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.2)',
+          'rgba(153, 102, 255, 0.2)',
+        ],
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+        ],
+        borderWidth: 1
       });
+      comparisonChart.update();
 
-      // When backend message named "audit.response" is recieved
-      public_ns.on('audit.response',comments => {
-        activeComments = comments;
-        createCommentsTable(activeComments);
+      if(comparisonPercentagesChart.data.datasets.length > 1){
+        comparisonPercentagesChart.data.datasets.pop();
+      }
+      comparisonPercentagesChart.data.datasets.push({
+        label: 'Average',
+        data: [data.totalBots/data.totalHumans*100],
+        backgroundColor: [
+          'rgba(255, 159, 64, 0.2)',
+        ],
+        borderColor: [
+          'rgba(255, 159, 64, 1)',
+        ],
+        borderWidth: 1
       });
+      comparisonPercentagesChart.update();
+    })
 
-      // Create progress/loading bar to show user video auditing progress
-      const loadingBar = new ldBar('#progress-bar');
+    // Clear the comments table
+    $('#comments-table tbody').html('');
 
-      // When backend message named "audit.progress" is recieved
-      public_ns.on('audit.progress',data => {
+    // Loop through each recieved comment
+    for(let i = 0; i < comments.length;i++){
+      // Create a new row for each comment and push it onto the table
+      $('#comments-table tbody').append(`
+      <tr>
+        <td>${comments[i].isBot?'<i class="fa fa-lg fa-robot"></i>':'<i class="fa fa-lg fa-user"></i>'}</td>
+        <td><img src="${comments[i].user.thumbnail_url}" /></td>
+        <td style="font-weight:bold"><a href="https://youtube.com/channel/${comments[i].user.id}">${comments[i].user.title}</a></td>
+        <td>${comments[i].comment.original_text}</td>
+        <td>${moment(comments[i].user.creation_date).format('YYY-MM-DD hh:mm:ss a')}</td>
+        <td>${comments[i].user.num_playlists}</td>
+        <td>${comments[i].user.num_subscribers}</td>
+        <td>${comments[i].user.num_subscriptions===null?"private":comments[i].user.num_subscriptions}</td>
+        <td>${comments[i].user.num_videos}</td>
+      </tr>
+      `);
+    }
+    $('#comments-table').DataTable();
 
-        // Get the variables data.completed and data.total
-        const { completed,total } = data;
+    // Show the comments table by removing the bootstrap CSS class "d-none"
+    $('#bot-rules-form').removeClass('d-none');
+    $('#comments-table-row').removeClass('d-none');
+    $('#results-row').removeClass('d-none');
+  }
+  const url = new URL(window.location);
+  const urlAuditId = url.searchParams.get('audit');
+  if(urlAuditId !== null){
+    requestCommentsTable(urlAuditId);
+  }
 
-        // Show the progress information by removing the bootstrap CSS class "d-none"
-        $('#progress-row').removeClass('d-none');
+  $('#bot-rules-form input').on('input',(e) => {
+    requestCommentsTable(activeAuditId);
+  });
 
-        // Update the progress text
-        $('#progress-bar-text').html(`<strong>Progress:</strong>&nbsp${completed}/${total}`);
+</script>
 
-        // Update the loading/progress bar
-        loadingBar.set((completed/total)*100);
-      });
+<!-- Used for creating progress/loading bars -->
+<script type="text/javascript" src="/js/loading-bar.js"></script>
 
-      // When the "Submit" button is clicked by the user
-      $('#audit-btn').click(() => {
+<script type="text/javascript">
 
-        // Clear the active comments
-        activeComments = [];
+  private_ns.on('history.response',history => {
+    toastr.success(`Instead of showing this notification build a gui from this data ${JSON.stringify(history)}`);
+  });
 
-        // Get the value that the user input and store it into the "total" variable
-        const total = $('#num-audit-pages').val();
+  // When backend message named "audit.response" is recieved
+  public_ns.on('audit.response',response => {
+    const {comments,id} = response;
+    history.pushState(null, '', '/home?audit='+id);
+    activeAuditId = id;
+    createCommentsTable(comments);
+  });
 
-        // Send a message to the backend with the number of pages to retrive and the url that the user input
-        public_ns.emit('audit.request',{
-          pages: total,
-          url: $('#audit-url').val(),
-        });
+  // Create progress/loading bar to show user video auditing progress
+  const loadingBar = new ldBar('#progress-bar');
 
-        // Hide the comments table by adding the bootstrap CSS class "d-none"
-        $('#comments-table').addClass('d-none');
+  // When backend message named "audit.progress" is recieved
+  public_ns.on('audit.progress',data => {
 
-        // Set the loading/progress bar to 0
-        loadingBar.set(0);
-      });
+    // Get the variables data.completed and data.total
+    const { completed,total } = data;
+
+    // Show the progress information by removing the bootstrap CSS class "d-none"
+    $('#progress-row').removeClass('d-none');
+
+    // Update the progress text
+    $('#progress-bar-text').html(`<strong>Progress:</strong>&nbsp${completed}/${total}`);
+
+    // Update the loading/progress bar
+    loadingBar.set((completed/total)*100);
+  });
+
+  // When the "Submit" button is clicked by the user
+  $('#audit-btn').click(() => {
+
+    // Clear the active comments
+    activeComments = [];
+
+    // Get the value that the user input and store it into the "total" variable
+    const total = $('#num-audit-pages').val();
+
+    // Send a message to the backend with the number of pages to retrive and the url that the user input
+    requestCommentsTable();
+
+    // Hide the comments table by adding the bootstrap CSS class "d-none"
+    $('#comments-table-row').addClass('d-none');
+
+    // Set the loading/progress bar to 0
+    loadingBar.set(0);
+  });
 
 
 
-    </script>
+</script>

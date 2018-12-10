@@ -1,33 +1,5 @@
 <div class="row mt-4">
   <div class="col">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col">
-          <h3>Popular Videos</h3>
-        </div>
-      </div>
-      <div class="row flex-row flex-nowrap">
-        {{#each trendingVideos}}
-        <div class="col-3">
-            <div class="card card-block">
-              <img class="card-img-top" src="{{this.thumbnail_url}}" alt="Card image cap">
-              <div class="card-body">
-                <h5 class="card-title text-center"><a href="https://www.youtube.com/watch?v={{this.id}}">{{this.title}}</a></h5>
-                <div class="row">
-                  <div class="col text-right">
-                    <small><script>document.write(moment('{{this.upload_date}}').format('YYYY-MM-DD hh:mm:ss a'))</script></small>
-                  </div>
-                </div>
-              </div>
-            </div>
-        </div>
-        {{/each}}
-      </div>
-    </div>
-  </div>
-</div>
-<div class="row">
-  <div class="col">
     <div class="row">
       <div class="col">
         <h3>Site Usage</h3>
