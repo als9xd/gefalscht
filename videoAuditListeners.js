@@ -102,7 +102,7 @@ module.exports = (socket,pgClient) => {
 
         const foundVideos = body.items;
 
-        if(!foundVideos){
+        if(!foundVideos.length){
           socket.emit('toastr.error','Could not find video');
           return;
         }
