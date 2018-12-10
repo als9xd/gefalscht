@@ -136,10 +136,6 @@ pgc.connect()
     });
   });
 
-  app.get('/video_history',(req,res) => {
-    res.render('video_history',{videoHistoryTab:true,auth:req.session.auth,username:req.session.username});
-  });
-
   server.listen(process.env.PORT,()=>{
     console.log(`Listening on port ${process.env.PORT}`);
   });
